@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('pasiens', function (Blueprint $table) {
             $table->id();
-            $table->string('no_rm')->unique();             
+            $table->string('no_rm')->unique();
             $table->string('nama');
             $table->string('nik', 16);
             $table->date('tanggal_lahir');
