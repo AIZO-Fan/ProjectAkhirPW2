@@ -15,14 +15,15 @@ return new class extends Migration
             $table->string('nik', 16);
             $table->date('tanggal_lahir');
             $table->enum('jenis_kelamin', ['L', 'P']);
-            $table->string(column: 'nama_dokter');
-            $table->string('diagnosa')->nullable();
+            $table->foreignId('dokter_id')->constrained('dokters')->onDelete('cascade');
+            $table->foreignId('penyakit_id')->nullable()->constrained('penyakits')->onDelete('set null');
             $table->date('tanggal_pemeriksaan');
             $table->enum('gol_darah', ['A', 'B', 'AB', 'O'])->nullable();
             $table->enum('jaminan', ['UMUM', 'BPJS', 'ASURANSI'])->nullable();
             $table->text('alamat');
             $table->timestamps();
-        });
+            });
+
     }
 
     public function down(): void

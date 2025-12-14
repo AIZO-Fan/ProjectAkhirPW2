@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Pasien;
@@ -7,101 +6,56 @@ use Illuminate\Http\Request;
 
 class PasienController extends Controller
 {
-    /**
-     * Menampilkan semua pasien
-     */
     public function index()
     {
-        return response()->json(Pasien::all());
+        return Pasien::with(['dokter', 'penyakit', 'obats'])->get();
     }
 
-    /**
-     * Menambah pasien baru
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'no_rm' => 'required|string|max:50',
-            'nama' => 'required|string|max:255',
-            'nik' => 'required|string|max:20',
-            'tanggal_lahir' => 'required|date',
-            'jenis_kelamin' => 'required|string',
-            'nama_dokter' => 'required|string|max:255',
-            'diagnosa' => 'required|string|max:255',
-            'tanggal_pemeriksaan' => 'required|date',
-            'gol_darah' => 'required|string|max:5',
-            'jaminan' => 'required|string|max:50',
-            'alamat' => 'required|string',
+        $data = $request->validate([
+            'no_rm'              => 'required|unique:pasiens',
+            'nama'               => 'required|string',
+            'nik'                => 'required|string|max:16',
+            'tanggal_lahir'      => 'required|date',
+            'jenis_kelamin'      => 'required',
+            'dokter_id'          => 'required|exists:dokters,id',
+            'penyakit_id'        => 'nullable|exists:penyakits,id',
+            'tanggal_pemeriksaan'=> 'required|date',
+            'gol_darah'          => 'nullable',
+            'jaminan'            => 'nullable',
+            'alamat'             => 'required|string',
+            'obats'              => 'array', // [id1, id2, ...]
         ]);
 
-        $pasien = Pasien::create(attributes: $validated);
+        $pasien = Pasien::create($data);
 
-        return response()->json([
-            'message' => 'Data pasien berhasil ditambahkan',
-            'data' => $pasien
-        ], 201);
-    }
-
-    /**
-     * Menampilkan pasien berdasarkan ID
-     */
-    public function show($id)
-    {
-        $pasien = Pasien::find($id);
-
-        if (!$pasien) {
-            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        if ($request->obats) {
+            $pasien->obats()->attach($request->obats);
         }
 
-        return response()->json($pasien);
+        return $pasien->load(['dokter', 'penyakit', 'obats']);
     }
 
-    /**
-     * Mengupdate data pasien
-     */
-    public function update(Request $request, $id)
+    public function show(Pasien $pasien)
     {
-        $pasien = Pasien::find($id);
-
-        if (!$pasien) {
-            return response()->json(['message' => 'Data tidak ditemukan'], 404);
-        }
-
-        $validated = $request->validate([
-            'no_rm' => 'string|max:50',
-            'nama' => 'string|max:255',
-            'nik' => 'string|max:20',
-            'tanggal_lahir' => 'date',
-            'jenis_kelamin' => 'string',
-            'nama_dokter' => 'string|max:255',
-            'diagnosa' => 'string|max:255',
-            'tanggal_pemeriksaan' => 'date',
-            'gol_darah' => 'string|max:5',
-            'jaminan' => 'string|max:50',
-            'alamat' => 'string',
-        ]);
-
-        $pasien->update($validated);
-
-        return response()->json([
-            'message' => 'Data pasien berhasil diperbarui',
-            'data' => $pasien
-        ]);
+        return $pasien->load(['dokter', 'penyakit', 'obats']);
     }
 
-    /**
-     * Menghapus pasien
-     */
-    public function destroy($id)
+    public function update(Request $request, Pasien $pasien)
     {
-        $pasien = Pasien::find($id);
+        $pasien->update($request->all());
 
-        if (!$pasien) {
-            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        if ($request->obats) {
+            $pasien->obats()->sync($request->obats);
         }
 
+        return $pasien->load(['dokter', 'penyakit', 'obats']);
+    }
+
+    public function destroy(Pasien $pasien)
+    {
         $pasien->delete();
-
-        return response()->json(['message' => 'Data pasien berhasil dihapus']);
+        return response()->json(['message' => 'Deleted']);
     }
 }

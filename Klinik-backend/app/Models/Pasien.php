@@ -1,38 +1,30 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Pasien extends Model
 {
     protected $fillable = [
-        'no_rm',
-        'nama',
-        'nik',
-        'tanggal_lahir',
-        'jenis_kelamin',
-        'nama_dokter',
-        'diagnosa',
-        'tanggal_pemeriksaan',
-        'gol_darah',
-        'jaminan',
-        'alamat',
+        'no_rm', 'nama', 'nik', 'tanggal_lahir', 'jenis_kelamin',
+        'dokter_id', 'penyakit_id', 'tanggal_pemeriksaan',
+        'gol_darah', 'jaminan', 'alamat'
     ];
 
-    protected $casts = [
-        'tanggal_lahir' => 'date',
-        'tanggal_pemeriksaan' => 'date',
-    ];
-
-    public function getTanggalLahirAttribute($value)
+    public function dokter()
     {
-        return Carbon::parse($value)->format('d-m-Y');
+        return $this->belongsTo(Dokter::class);
     }
 
-    public function getTanggalPemeriksaanAttribute($value)
+    public function penyakit()
     {
-        return Carbon::parse($value)->format('d-m-Y');
+        return $this->belongsTo(Penyakit::class);
+    }
+
+    public function obats()
+    {
+        return $this->belongsToMany(Obat::class, 'pasien_obat')
+            ->withPivot('jumlah', 'catatan')
+            ->withTimestamps();
     }
 }
